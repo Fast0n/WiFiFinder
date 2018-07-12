@@ -1,0 +1,43 @@
+<resources>
+    <string name="action_scan">Scansiona</string>
+    <string name="dialog">La funzione \'Scansione\' funziona utilizzando l\'app \'WIFI WPS WPA TESTER\' che non è installata in questo dispositivo, vuoi installare l\'app?</string>
+    <string name="yes">Si</string>
+
+    <!-- main_warning -->
+    <string name="warning">Attenzione</string>
+    <string name="warning_content">Si prega di abilitare il GPS dalle impostazioni</string>
+    <string name="cancel">Annulla</string>
+    <string name="settings">Impostazioni</string>
+
+    <string name="info">Info</string>
+    <string name="version">Versione</string>
+    <string name="translate">Traduzione</string>
+    <string name="source_code">Codice Sorgente</string>
+    <string name="support">Conttatami</string>
+    <string name="donate">Dona</string>
+    <string name="author">Autore</string>
+    
+    <!-- ErrorConnectionActivity -->
+    <string name="errorconnection">Connessione a internet assente</string>
+    <string name="errorconnection_one">Riconetti il dispositivo e riprova…</string>
+    <string name="reload">Ricarica</string>
+
+    <string name="toast">Nome rete troppo breve (min 1 carattere)</string>
+    <string name="toast2">Password troppo breve (min 8 caratteri)</string>
+    <string name="toast3">Posizione non valida</string>
+    <string name="toast4">Riconnetti a internet e riprova…</string>
+    <string name="toast6">Password copiata</string>
+    <string name="share">Condividi…</string>
+    
+    
+    <string name="radioButton">Testo</string>
+    <string name="radioButton2">Wi-Fi Aperto</string>
+    <string name="radioButton3">Non funziona</string>
+    <string name="share_text">Trovata grazie a Wi-Fi Finder</string>
+
+    <string name="email_message">Desidero segnalare questa rete: \n\nPaese: %s\nSSID: %s\nPassword: %s</string>
+
+    <string name="add_wifi_network">Aggiungi Rete Wi-Fi</string>
+    <string name="add_wifi">Aggiungi SSID Wi-Fi</string>
+    <string name="add">Aggiungi</string>
+</resources>

@@ -1,0 +1,50 @@
+{
+  "project_info": {
+    "project_number": "461953805115",
+    "firebase_url": "https://wififinder-75b30.firebaseio.com",
+    "project_id": "wififinder-75b30",
+    "storage_bucket": "wififinder-75b30.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:461953805115:android:948f86ac48a80dcc",
+        "android_client_info": {
+          "package_name": "com.fast0n.wififinder"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "461953805115-o7bvjrdn4tl6jqlehhr2nfhuk0h1at34.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fast0n.wififinder",
+            "certificate_hash": "2d9ed74733b3ebeb5973f224cf45123cd04a495d"
+          }
+        },
+        {
+          "client_id": "461953805115-5io7kadoctempeb9gidejoplbcf083jg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeHul4K4OAKU2FEYYFtP1_NK6mufUWHxc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
