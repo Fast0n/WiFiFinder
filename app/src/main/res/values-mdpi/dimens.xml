@@ -1,6 +1,8 @@
 <resources>
     <dimen name="text_radiobutton">10sp</dimen>
-
     <dimen name="recyclerview_bottom">55dp</dimen>
-
+    <dimen name="row_credit_img">35dp</dimen>
+    <dimen name="row_credit_animation">40dp</dimen>
+    <dimen name="row_info_padding">10dp</dimen>
+    <dimen name="row_info_img">25dp</dimen>
 </resources>

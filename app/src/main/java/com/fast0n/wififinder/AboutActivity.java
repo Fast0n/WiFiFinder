@@ -5,26 +5,20 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
-import android.view.Gravity;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.Calendar;
 import java.util.Objects;
 
 import mehdi.sakout.aboutpage.AboutPage;
 import mehdi.sakout.aboutpage.Element;
-
 
 public class AboutActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_info);
+        setContentView(R.layout.activity_about);
         // set title activity in the toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -38,7 +32,7 @@ public class AboutActivity extends AppCompatActivity {
         paypalElement.setOnClickListener(view -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.paypal.me/Fast0n/1.0"))));
 
         Element accountElement = new Element();
-        accountElement.setTitle(getString(R.string.author)+"\nMassimiliano Montaleone (Fast0n)");
+        accountElement.setTitle(getString(R.string.author) + "\nMassimiliano Montaleone (Fast0n)");
         accountElement.setIconDrawable(R.drawable.ic_user);
         accountElement.setOnClickListener(view -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.github.com/fast0n"))));
 
@@ -69,7 +63,7 @@ public class AboutActivity extends AppCompatActivity {
                 .setImage(R.mipmap.ic_launcher)
                 .setDescription(getString(R.string.about))
                 .addItem(new Element().setIconDrawable(R.drawable.ic_info).setTitle(getString(R.string.version) + " " + BuildConfig.VERSION_NAME + " ("
-                        + BuildConfig.VERSION_CODE + ") (" + BuildConfig.APPLICATION_ID + ")") )
+                        + BuildConfig.VERSION_CODE + ") (" + BuildConfig.APPLICATION_ID + ")"))
                 .addItem(instagramElement)
                 .addItem(soucecodeElement)
                 .addItem(translateElement)
@@ -81,25 +75,9 @@ public class AboutActivity extends AppCompatActivity {
         setContentView(aboutPage);
     }
 
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                Intent mainActivity = new Intent(AboutActivity.this, MainActivity.class);
-                startActivity(mainActivity);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     @Override
     public void onBackPressed() {
         finish();
-        Intent mainActivity = new Intent(AboutActivity.this, MainActivity.class);
-        startActivity(mainActivity);
+        startActivity(new Intent(AboutActivity.this, MainActivity.class));
     }
 }

@@ -1,6 +1,6 @@
 package com.fast0n.wififinder.main;
 
-public class Main  {
+public class Main {
 
     String counter, ssid, location, pwdtype, datetime, nameLocation;
 

@@ -9,6 +9,7 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -22,7 +23,11 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -60,6 +65,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -73,14 +80,15 @@ import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     StringBuilder sb = new StringBuilder();
     WifiManager mainWifi;
-    WifiReceiver receiverWifi;
+    MainActivity.WifiReceiver receiverWifi;
     RecyclerView recycler_view, recycler_view2;
     TextView getNome;
-    Button addWifi,add;
+    Button addWifi, add;
     EditText editText, editText2;
     List<WifiList> wifiListList = new ArrayList<>();
     List<Main> mainList = new ArrayList<>();
@@ -90,14 +98,17 @@ public class MainActivity extends AppCompatActivity {
     AdView mAdView;
     LinearLayoutManager llm, llm2;
     ProgressBar progressBar, progressBar2;
-    String tv_password, tv_location, nome, position;
+    String tv_password, tv_location, nome, position, toggleState;
     FloatingActionButton fab;
     boolean[] counter = {true};
     RadioGroup rg;
     Vibrator v;
+    SharedPreferences settings;
+    SharedPreferences.Editor editor;
 
     private ClipboardManager myClipboard;
     private ClipData myClip;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,19 +120,35 @@ public class MainActivity extends AppCompatActivity {
         mTitle.setText(R.string.app_name);
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
 
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
         // java addresses
         fab = findViewById(R.id.fab);
         mAdView = findViewById(R.id.adView);
         progressBar = findViewById(R.id.spin_kit);
         recycler_view = findViewById(R.id.recycler_view);
         v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        settings = getSharedPreferences("sharedPreferences", 0);
+        toggleState = settings.getString("toggleState", null);
+        editor = settings.edit();
+
+        if (isOnline()) {
+            fab.setVisibility(View.GONE);
+        }
 
         //Firebase
         database = FirebaseDatabase.getInstance();
         databaseRef = database.getReference();
 
         // banner
-        MobileAds.initialize(this, "ca-app-pub-9646303341923759~8475140428");
+        MobileAds.initialize(this, "ca-app-pub-9646303341923759~2289006026");
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
@@ -129,181 +156,220 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setIndeterminateDrawable(FoldingCube);
         FoldingCube.setColor(getResources().getColor(R.color.colorAccent));
 
-        // check if online
-        if (isOnline())
-            startActivity(new Intent(MainActivity.this, ErrorConnectionActivity.class));
-
-
         recycler_view.setHasFixedSize(true);
         llm = new LinearLayoutManager(this);
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         recycler_view.setLayoutManager(llm);
 
+
+        try {
+            if (toggleState.equals("0")) {
+                FirebaseMessaging.getInstance().subscribeToTopic("news");
+
+            } else {
+                FirebaseMessaging.getInstance().unsubscribeFromTopic("news");
+
+            }
+        } catch (Exception ignored) {
+            FirebaseMessaging.getInstance().subscribeToTopic("news");
+            editor.putString("toggleState", "0");
+            editor.apply();
+
+        }
+
         recycler_view.addOnItemTouchListener(new RecyclerItemListener(getApplicationContext(), recycler_view,
                 new RecyclerItemListener.RecyclerTouchListener() {
                     public void onClickItem(View arg1, int position) {
-                        TextView tv_password = arg1.findViewById(R.id.tv_password);
-                        String stringPassword = tv_password.getText().toString();
+                        if (!isOnline()) {
+                            TextView tv_password = arg1.findViewById(R.id.tv_password);
+                            String stringPassword = tv_password.getText().toString();
 
-                        if (!stringPassword.equals(getString(R.string.radioButton2).toUpperCase()) && !stringPassword.equals(getString(R.string.radioButton3).toUpperCase())) {
+                            if (!stringPassword.equals(getString(R.string.radioButton2).toUpperCase()) && !stringPassword.equals(getString(R.string.radioButton3).toUpperCase())) {
 
-                            myClipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                            myClip = ClipData.newPlainText("text", stringPassword);
-                            myClipboard.setPrimaryClip(myClip);
-                            vibrator();
-                            Toasty.warning(MainActivity.this, getString(R.string.toast6), Toast.LENGTH_SHORT).show();
+                                myClipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                                myClip = ClipData.newPlainText("text", stringPassword);
+                                myClipboard.setPrimaryClip(myClip);
+                                vibrator();
+                                Toasty.warning(MainActivity.this, getString(R.string.toast6), Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toasty.info(MainActivity.this, getString(R.string.errorconnection_one), Toast.LENGTH_SHORT, true)
+                                    .show();
+
                         }
+
 
                     }
 
                     @SuppressLint("ClickableViewAccessibility")
                     public void onLongClickItem(View arg1, int position) {
                         vibrator();
-                        TextView tv_ssid = arg1.findViewById(R.id.tv_ssid);
-                        TextView tv_location = arg1.findViewById(R.id.tv_location);
-                        TextView tv_password = arg1.findViewById(R.id.tv_password);
+                        if (!isOnline()) {
+                            TextView tv_ssid = arg1.findViewById(R.id.tv_ssid);
+                            TextView tv_location = arg1.findViewById(R.id.tv_location);
+                            TextView tv_password = arg1.findViewById(R.id.tv_password);
 
-                        String stringSsid = tv_ssid.getText().toString();
-                        String stringLocation = tv_location.getText().toString();
-                        String stringPassword = tv_password.getText().toString();
+                            String stringSsid = tv_ssid.getText().toString();
+                            String stringLocation = tv_location.getText().toString();
+                            String stringPassword = tv_password.getText().toString();
 
-                        Dialog dialog3 = new Dialog(MainActivity.this);
-                        dialog3.setCancelable(true);
-                        dialog3.setContentView(R.layout.map_dialog);
-                        Window window = dialog3.getWindow();
-                        window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                        window.setGravity(Gravity.CENTER);
-                        window.setBackgroundDrawableResource(R.drawable.border_dialog);
-
-
-                        //java addresses
-                        WebView browser = dialog3.findViewById(R.id.webview);
-                        ImageButton imageButton = dialog3.findViewById(R.id.imageButton);
-                        ImageButton imageButton2 = dialog3.findViewById(R.id.imageButton2);
-                        ImageButton imageButton3 = dialog3.findViewById(R.id.imageButton3);
-                        ImageButton imageButton4 = dialog3.findViewById(R.id.imageButton4);
-
-                        if (stringPassword.equals(getString(R.string.radioButton2).toUpperCase()) || stringPassword.equals(getString(R.string.radioButton3).toUpperCase()))
-                            imageButton3.setVisibility(View.GONE);
+                            Dialog dialog3 = new Dialog(MainActivity.this);
+                            dialog3.setCancelable(true);
+                            dialog3.setContentView(R.layout.map_dialog);
+                            Window window = dialog3.getWindow();
+                            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                            window.setGravity(Gravity.CENTER);
+                            window.setBackgroundDrawableResource(R.drawable.border_dialog);
 
 
-                        browser.getSettings().setJavaScriptEnabled(true);
-                        browser.setWebViewClient(new WebViewClient());
-                        String url = "https://maps.google.com/maps?q=" + stringLocation.replaceAll("\\s+", "%20");
-                        browser.loadUrl(url);
+                            //java addresses
+                            WebView browser = dialog3.findViewById(R.id.webview);
+                            ImageButton imageButton = dialog3.findViewById(R.id.imageButton);
+                            ImageButton imageButton2 = dialog3.findViewById(R.id.imageButton2);
+                            ImageButton imageButton3 = dialog3.findViewById(R.id.imageButton3);
+                            ImageButton imageButton4 = dialog3.findViewById(R.id.imageButton4);
+
+                            if (stringPassword.equals(getString(R.string.radioButton2).toUpperCase()) || stringPassword.equals(getString(R.string.radioButton3).toUpperCase()))
+                                imageButton3.setVisibility(View.GONE);
 
 
-                        browser.setOnTouchListener((v, event) -> true);
-
-                        String shareText = "SSID: " + stringSsid + "\nPassword: " + stringPassword + "\n" + getString(R.string.share_text);
-
-                        imageButton.setOnClickListener(view -> {
-
-                            Intent sendIntent = new Intent();
-                            sendIntent.setAction(Intent.ACTION_SEND);
-                            sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
-                            sendIntent.setType("text/plain");
-                            startActivity(Intent.createChooser(sendIntent, getString(R.string.share)));
-
-                        });
+                            browser.getSettings().setJavaScriptEnabled(true);
+                            browser.setWebViewClient(new WebViewClient());
+                            String url = "https://maps.google.com/maps?q=" + stringLocation.replaceAll("\\s+", "%20");
+                            browser.loadUrl(url);
 
 
-                        imageButton2.setOnClickListener(view -> {
-                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                            dialog3.dismiss();
+                            browser.setOnTouchListener((v, event) -> true);
 
-                        });
+                            String shareText = "SSID: " + stringSsid + "\nPassword: " + stringPassword + "\n" + getString(R.string.share_text);
 
-                        imageButton3.setOnClickListener(view -> {
-                            myClipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                            myClip = ClipData.newPlainText("text", stringPassword);
-                            myClipboard.setPrimaryClip(myClip);
-                            vibrator();
-                            Toasty.warning(MainActivity.this, getString(R.string.toast6), Toast.LENGTH_SHORT).show();
+                            imageButton.setOnClickListener(view -> {
 
-                        });
+                                Intent sendIntent = new Intent();
+                                sendIntent.setAction(Intent.ACTION_SEND);
+                                sendIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                                sendIntent.setType("text/plain");
+                                startActivity(Intent.createChooser(sendIntent, getString(R.string.share)));
 
-                        imageButton4.setOnClickListener(view -> {
-                            vibrator();
+                            });
 
 
-                            Intent intent = new Intent(Intent.ACTION_SENDTO);
-                            intent.setType("text/html");
-                            intent.setData(Uri.parse("mailto:Theplayergame97@gmail.com"));
-                            intent.putExtra(Intent.EXTRA_SUBJECT, "Wi-Fi Finder Report");
+                            imageButton2.setOnClickListener(view -> {
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                                dialog3.dismiss();
 
-                            @SuppressLint("StringFormatMatches") String text = getString(R.string.email_message, stringLocation.split(",")[3], String.valueOf(stringSsid), String.valueOf(stringPassword));
+                            });
 
-                            intent.putExtra(Intent.EXTRA_TEXT, text);
+                            imageButton3.setOnClickListener(view -> {
+                                myClipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                                myClip = ClipData.newPlainText("text", stringPassword);
+                                myClipboard.setPrimaryClip(myClip);
+                                vibrator();
+                                Toasty.warning(MainActivity.this, getString(R.string.toast6), Toast.LENGTH_SHORT).show();
 
-                            startActivity(Intent.createChooser(intent, "Send Email"));
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            dialog3.dismiss();
+                            });
+
+                            imageButton4.setOnClickListener(view -> {
+                                vibrator();
 
 
-                        });
+                                Intent intent = new Intent(Intent.ACTION_SENDTO);
+                                intent.setType("text/html");
+                                intent.setData(Uri.parse("mailto:Theplayergame97@gmail.com"));
+                                intent.putExtra(Intent.EXTRA_SUBJECT, "Wi-Fi Finder Report");
 
-                        dialog3.show();
+                                @SuppressLint("StringFormatMatches") String text = getString(R.string.email_message, stringLocation.split(",")[3], String.valueOf(stringSsid), String.valueOf(stringPassword));
+
+                                intent.putExtra(Intent.EXTRA_TEXT, text);
+
+                                startActivity(Intent.createChooser(intent, "Send Email"));
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                dialog3.dismiss();
 
 
+                            });
+
+                            dialog3.show();
+
+
+                        } else {
+                            Toasty.info(MainActivity.this, getString(R.string.errorconnection_one), Toast.LENGTH_SHORT, true)
+                                    .show();
+
+                        }
                     }
 
-
-                }));
-
-
-        databaseRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-                if (counter[0]) {
-                    for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
-                        String key = childSnapshot.getKey();
-                        int size = 0;
-                        for (DataSnapshot ignored : dataSnapshot.child(key).getChildren()) {
-                            size++;
-                        }
+                }
 
 
-                        for (int i = size - 1; i > -1; i--) {
-                            String name, location, pwdtype, datetime, nameLocation = null;
+        ));
 
-                            name = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("name").getValue());
-                            location = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("location").getValue());
-                            pwdtype = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("pwdtype").getValue());
-                            datetime = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("datetime").getValue());
 
-                            try {
-                                Double MyLat = Double.parseDouble(location.split(",")[0]);
-                                Double MyLong = Double.parseDouble(location.split(",")[1]);
+        if (!isOnline()) {
 
-                                Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
-                                List<Address> addresses = null;
-                                addresses = geocoder.getFromLocation(MyLat, MyLong, 1);
-                                String cityName = addresses.get(0).getAddressLine(0);
 
-                                nameLocation = cityName;
-                            } catch (NumberFormatException | IOException ignored) {
+            databaseRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                    if (counter[0]) {
+                        for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
+                            String key = childSnapshot.getKey();
+                            int size = 0;
+                            for (DataSnapshot ignored : dataSnapshot.child(key).getChildren()) {
+                                size++;
                             }
 
-                            mainList.add(new Main(String.valueOf(size - i), name, location, pwdtype, datetime, nameLocation));
+                            for (int i = size - 1; i > -1; i--) {
+                                String name, location, pwdtype, datetime, nameLocation = null;
+
+                                name = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("name").getValue());
+                                location = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("location").getValue());
+                                pwdtype = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("pwdtype").getValue());
+                                datetime = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("datetime").getValue());
+
+                                try {
+                                    Double MyLat = Double.parseDouble(location.split(",")[0]);
+                                    Double MyLong = Double.parseDouble(location.split(",")[1]);
+
+                                    Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+                                    List<Address> addresses = null;
+                                    addresses = geocoder.getFromLocation(MyLat, MyLong, 1);
+                                    String cityName = addresses.get(0).getAddressLine(0);
+
+                                    nameLocation = cityName;
+                                } catch (NumberFormatException | IOException ignored) {
+                                }
+
+                                mainList.add(new Main(String.valueOf(size - i), name, location, pwdtype, datetime, nameLocation));
+                            }
+
+
                         }
 
+
+                        MainAdapter ca = new MainAdapter(mainList, MainActivity.this);
+                        recycler_view.setAdapter(ca);
+                        counter[0] = false;
+                        progressBar.setVisibility(View.GONE);
                     }
-
-
-                    MainAdapter ca = new MainAdapter(mainList, MainActivity.this);
-                    recycler_view.setAdapter(ca);
-                    counter[0] = false;
-                    progressBar.setVisibility(View.GONE);
                 }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
 
-            }
-        });
+                }
+            });
+
+        } else {
+            String timeStamp = new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime());
+            mainList.add(new Main("0", getString(R.string.errorconnection), "", "", timeStamp, getString(R.string.errorconnection_one)));
+            MainAdapter ca = new MainAdapter(mainList, MainActivity.this);
+            recycler_view.setAdapter(ca);
+            counter[0] = false;
+            progressBar.setVisibility(View.GONE);
+
+        }
 
         PermissionListener permissionlistener = new PermissionListener() {
             @Override
@@ -319,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
         // check permission
         TedPermission.with(MainActivity.this)
                 .setPermissionListener(permissionlistener)
-                .setPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
+                .setPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
                 .check();
 
 
@@ -492,6 +558,21 @@ public class MainActivity extends AppCompatActivity {
 
             dialog.show();
         });
+
+
+    }
+
+    private void subscribeToPushService() {
+        FirebaseMessaging.getInstance().subscribeToTopic("news");
+
+        Log.d("AndroidBash", "Subscribed");
+        Toast.makeText(MainActivity.this, "Subscribed", Toast.LENGTH_SHORT).show();
+
+        String token = FirebaseInstanceId.getInstance().getToken();
+
+        // Log and toast
+        Log.d("AndroidBash", token);
+        Toast.makeText(MainActivity.this, token, Toast.LENGTH_SHORT).show();
     }
 
     public void vibrator() {
@@ -509,9 +590,9 @@ public class MainActivity extends AppCompatActivity {
         GPSTracker gps;
         Geocoder geocoder;
         if (ActivityCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         } else {
@@ -558,8 +639,20 @@ public class MainActivity extends AppCompatActivity {
                 || !cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
@@ -568,28 +661,46 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_info) {
-            startActivity(new Intent(MainActivity.this, AboutActivity.class));
-
-            return true;
-        } else if (id == R.id.action_scan) {
+        if (id == R.id.action_scan) {
             Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.tester.wpswpatester");
-            if (launchIntent != null) {
-                startActivity(launchIntent);
+            Intent launchIntent1 = getPackageManager().getLaunchIntentForPackage("as.wps.wpatester");
+            if (launchIntent != null || launchIntent1 != null) {
+                try {
+                    startActivity(launchIntent);
+                } catch (Exception ignored) {
+                    startActivity(launchIntent1);
+                }
             } else {
                 MaterialDialog.Builder builder = new MaterialDialog.Builder(this)
                         .title(R.string.app_name)
                         .content(R.string.dialog)
-                        .positiveText(R.string.yes).onPositive((dialog, which) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.tester.wpswpatester")))).negativeText(R.string.no);
+                        .positiveText(R.string.yes).onPositive((dialog, which) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=as.wps.wpatester")))).negativeText(R.string.no);
 
                 MaterialDialog dialog = builder.build();
                 dialog.show();
             }
         }
 
+
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.action_info)
+            startActivity(new Intent(MainActivity.this, AboutActivity.class));
+        else if (id == R.id.action_settings)
+            startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
 
     private class WifiReceiver extends BroadcastReceiver {
         public void onReceive(Context c, Intent intent) {

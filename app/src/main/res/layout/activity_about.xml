@@ -28,6 +28,6 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_info" />
+    <include layout="@layout/content_about" />
 
 </android.support.design.widget.CoordinatorLayout>
