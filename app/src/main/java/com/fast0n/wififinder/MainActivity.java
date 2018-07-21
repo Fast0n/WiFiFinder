@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.ConnectivityManager;
@@ -42,6 +44,8 @@ import android.view.Window;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -49,7 +53,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.MaterialDialog;
+import com.androidstudy.networkmanager.Tovuti;
 import com.fast0n.wififinder.java.GPSTracker;
 import com.fast0n.wififinder.java.RecyclerItemListener;
 import com.fast0n.wififinder.main.Main;
@@ -65,7 +69,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
@@ -105,7 +108,6 @@ public class MainActivity extends AppCompatActivity
     Vibrator v;
     SharedPreferences settings;
     SharedPreferences.Editor editor;
-
     private ClipboardManager myClipboard;
     private ClipData myClip;
 
@@ -126,8 +128,14 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
+
+        /**
+         *  Icone della NavigationView colorate
+         */
         NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setItemIconTintList(null);
         navigationView.setNavigationItemSelectedListener(this);
+
 
         // java addresses
         fab = findViewById(R.id.fab);
@@ -138,10 +146,6 @@ public class MainActivity extends AppCompatActivity
         settings = getSharedPreferences("sharedPreferences", 0);
         toggleState = settings.getString("toggleState", null);
         editor = settings.edit();
-
-        if (isOnline()) {
-            fab.setVisibility(View.GONE);
-        }
 
         //Firebase
         database = FirebaseDatabase.getInstance();
@@ -154,13 +158,12 @@ public class MainActivity extends AppCompatActivity
 
         FoldingCube FoldingCube = new FoldingCube();
         progressBar.setIndeterminateDrawable(FoldingCube);
-        FoldingCube.setColor(getResources().getColor(R.color.colorAccent));
+        FoldingCube.setColor(getResources().getColor(android.R.color.white));
 
         recycler_view.setHasFixedSize(true);
         llm = new LinearLayoutManager(this);
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         recycler_view.setLayoutManager(llm);
-
 
         try {
             if (toggleState.equals("0")) {
@@ -201,7 +204,7 @@ public class MainActivity extends AppCompatActivity
 
                     }
 
-                    @SuppressLint("ClickableViewAccessibility")
+                    @SuppressLint({"ClickableViewAccessibility", "SetJavaScriptEnabled"})
                     public void onLongClickItem(View arg1, int position) {
                         vibrator();
                         if (!isOnline()) {
@@ -292,11 +295,10 @@ public class MainActivity extends AppCompatActivity
                             dialog3.show();
 
 
-                        } else {
-                            Toasty.info(MainActivity.this, getString(R.string.errorconnection_one), Toast.LENGTH_SHORT, true)
-                                    .show();
+                        } else
+                            Toasty.info(MainActivity.this, getString(R.string.errorconnection_one), Toast.LENGTH_SHORT, true).show();
 
-                        }
+
                     }
 
                 }
@@ -305,71 +307,72 @@ public class MainActivity extends AppCompatActivity
         ));
 
 
-        if (!isOnline()) {
+        Tovuti.from(this).monitor((connectionType, isConnected, isFast) -> {
 
+            if (isFast) {
+                databaseRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-            databaseRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-                    if (counter[0]) {
-                        for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
-                            String key = childSnapshot.getKey();
-                            int size = 0;
-                            for (DataSnapshot ignored : dataSnapshot.child(key).getChildren()) {
-                                size++;
-                            }
-
-                            for (int i = size - 1; i > -1; i--) {
-                                String name, location, pwdtype, datetime, nameLocation = null;
-
-                                name = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("name").getValue());
-                                location = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("location").getValue());
-                                pwdtype = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("pwdtype").getValue());
-                                datetime = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("datetime").getValue());
-
-                                try {
-                                    Double MyLat = Double.parseDouble(location.split(",")[0]);
-                                    Double MyLong = Double.parseDouble(location.split(",")[1]);
-
-                                    Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
-                                    List<Address> addresses = null;
-                                    addresses = geocoder.getFromLocation(MyLat, MyLong, 1);
-                                    String cityName = addresses.get(0).getAddressLine(0);
-
-                                    nameLocation = cityName;
-                                } catch (NumberFormatException | IOException ignored) {
+                        if (counter[0]) {
+                            for (DataSnapshot childSnapshot : dataSnapshot.getChildren()) {
+                                String key = childSnapshot.getKey();
+                                int size = 0;
+                                for (DataSnapshot ignored : dataSnapshot.child(key).getChildren()) {
+                                    size++;
                                 }
 
-                                mainList.add(new Main(String.valueOf(size - i), name, location, pwdtype, datetime, nameLocation));
+                                for (int i = size - 1; i > -1; i--) {
+                                    String name, location, pwdtype, datetime, nameLocation = null;
+
+                                    name = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("name").getValue());
+                                    location = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("location").getValue());
+                                    pwdtype = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("pwdtype").getValue());
+                                    datetime = String.valueOf(dataSnapshot.child(key).child(String.valueOf(i)).child("datetime").getValue());
+
+                                    try {
+                                        Double MyLat = Double.parseDouble(location.split(",")[0]);
+                                        Double MyLong = Double.parseDouble(location.split(",")[1]);
+
+                                        Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+                                        List<Address> addresses;
+                                        addresses = geocoder.getFromLocation(MyLat, MyLong, 1);
+
+                                        nameLocation = addresses.get(0).getAddressLine(0);
+                                    } catch (NumberFormatException | IOException ignored) {
+                                    }
+
+                                    mainList.add(new Main(size - i, name, location, pwdtype, datetime, nameLocation, size));
+                                }
+
+
                             }
 
 
+                            MainAdapter ca = new MainAdapter(mainList, MainActivity.this);
+                            recycler_view.setAdapter(ca);
+                            counter[0] = false;
+                            progressBar.setVisibility(View.GONE);
                         }
-
-
-                        MainAdapter ca = new MainAdapter(mainList, MainActivity.this);
-                        recycler_view.setAdapter(ca);
-                        counter[0] = false;
-                        progressBar.setVisibility(View.GONE);
                     }
-                }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                }
-            });
+                    }
+                });
 
-        } else {
-            String timeStamp = new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime());
-            mainList.add(new Main("0", getString(R.string.errorconnection), "", "", timeStamp, getString(R.string.errorconnection_one)));
-            MainAdapter ca = new MainAdapter(mainList, MainActivity.this);
-            recycler_view.setAdapter(ca);
-            counter[0] = false;
-            progressBar.setVisibility(View.GONE);
+            } else {
+                fab.hide();
+                String timeStamp = "01-01-2000";
+                mainList.add(new Main(0, getString(R.string.errorconnection), "", "", timeStamp, getString(R.string.errorconnection_one), 0));
+                MainAdapter ca = new MainAdapter(mainList, MainActivity.this);
+                recycler_view.setAdapter(ca);
+                counter[0] = false;
+                progressBar.setVisibility(View.GONE);
 
-        }
+            }
+        });
 
         PermissionListener permissionlistener = new PermissionListener() {
             @Override
@@ -392,36 +395,47 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(view -> {
             counter[0] = true;
             Dialog dialog = new Dialog(MainActivity.this);
-            dialog.setCancelable(true);
             dialog.setContentView(R.layout.custom_dialog);
             Window window = dialog.getWindow();
+            assert window != null;
             window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             window.setGravity(Gravity.CENTER);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setBackgroundDrawableResource(R.drawable.border_dialog);
 
             //java addresses
             add = dialog.findViewById(R.id.add);
             addWifi = dialog.findViewById(R.id.addWifi);
             editText = dialog.findViewById(R.id.editText);
             editText2 = dialog.findViewById(R.id.editText2);
-            rg = dialog.findViewById(R.id.radioGroup);
+
+            CheckBox checkBox = dialog.findViewById(R.id.checkBox);
+            CheckBox checkBox2 = dialog.findViewById(R.id.checkBox2);
+            CheckBox checkBox3 = dialog.findViewById(R.id.checkBox3);
 
 
-            rg.setOnCheckedChangeListener((group, checkedId) -> {
-                switch (checkedId) {
-                    case R.id.radioButton:
-                        editText2.setEnabled(true);
-                        editText2.setText("");
-                        break;
-                    case R.id.radioButton2:
-                        editText2.setEnabled(false);
-                        editText2.setText(getString(R.string.radioButton2));
-                        break;
-                    case R.id.radioButton3:
-                        editText2.setEnabled(false);
-                        editText2.setText(getString(R.string.radioButton3));
-                        break;
-                }
+            checkBox.setOnClickListener(view1 -> {
+                editText2.setEnabled(true);
+                editText2.setText("");
+                checkBox2.setChecked(false);
+                checkBox3.setChecked(false);
             });
+
+
+            checkBox2.setOnClickListener(view1 -> {
+                editText2.setEnabled(false);
+                editText2.setText(getString(R.string.radioButton2));
+                checkBox.setChecked(false);
+                checkBox3.setChecked(false);
+            });
+
+            checkBox3.setOnClickListener(view1 -> {
+                editText2.setEnabled(false);
+                editText2.setText(getString(R.string.radioButton3));
+                checkBox.setChecked(false);
+                checkBox2.setChecked(false);
+            });
+
 
             show_gps();
 
@@ -434,6 +448,7 @@ public class MainActivity extends AppCompatActivity
                     dialog2.setCancelable(true);
                     dialog2.setContentView(R.layout.activity_wifi_list);
                     Window window2 = dialog.getWindow();
+                    assert window2 != null;
                     window2.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                     window2.setGravity(Gravity.CENTER);
                     dialog2.show();
@@ -449,7 +464,7 @@ public class MainActivity extends AppCompatActivity
 
                     FoldingCube FoldingCube2 = new FoldingCube();
                     progressBar2.setIndeterminateDrawable(FoldingCube2);
-                    FoldingCube2.setColor(getResources().getColor(R.color.colorAccent));
+                    FoldingCube2.setColor(getResources().getColor(R.color.colorBackgroundCardView));
 
                     recycler_view2.addOnItemTouchListener(new RecyclerItemListener(getApplicationContext(), recycler_view2,
                             new RecyclerItemListener.RecyclerTouchListener() {
@@ -496,7 +511,7 @@ public class MainActivity extends AppCompatActivity
                                 Double MyLong = Double.parseDouble(position.split(",")[1]);
 
                                 Geocoder geocoder = new Geocoder(MainActivity.this, Locale.US);
-                                List<Address> addresses = null;
+                                List<Address> addresses;
                                 addresses = geocoder.getFromLocation(MyLat, MyLong, 1);
                                 String cityName = addresses.get(0).getAddressLine(0);
 
@@ -509,7 +524,7 @@ public class MainActivity extends AppCompatActivity
                                 }
 
                                 if (counter[0]) {
-                                    String timeStamp = new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime());
+                                    String timeStamp = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
                                     databaseRef.child(db).child(String.valueOf(size)).child("name").setValue(editText.getText().toString());
                                     databaseRef.child(db).child(String.valueOf(size)).child("location").setValue(position);
 
@@ -562,19 +577,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void subscribeToPushService() {
-        FirebaseMessaging.getInstance().subscribeToTopic("news");
-
-        Log.d("AndroidBash", "Subscribed");
-        Toast.makeText(MainActivity.this, "Subscribed", Toast.LENGTH_SHORT).show();
-
-        String token = FirebaseInstanceId.getInstance().getToken();
-
-        // Log and toast
-        Log.d("AndroidBash", token);
-        Toast.makeText(MainActivity.this, token, Toast.LENGTH_SHORT).show();
-    }
-
     public void vibrator() {
 
         // Vibrate for 50 milliseconds
@@ -611,7 +613,7 @@ public class MainActivity extends AppCompatActivity
                 position = stringlat + ", " + stringlong;
 
                 geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
-                List<Address> addresses = null;
+                List<Address> addresses;
 
                 try {
                     addresses = geocoder.getFromLocation(latitude, longitude, 1);
@@ -639,10 +641,14 @@ public class MainActivity extends AppCompatActivity
                 || !cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -660,27 +666,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-
-        if (id == R.id.action_scan) {
-            Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.tester.wpswpatester");
-            Intent launchIntent1 = getPackageManager().getLaunchIntentForPackage("as.wps.wpatester");
-            if (launchIntent != null || launchIntent1 != null) {
-                try {
-                    startActivity(launchIntent);
-                } catch (Exception ignored) {
-                    startActivity(launchIntent1);
-                }
-            } else {
-                MaterialDialog.Builder builder = new MaterialDialog.Builder(this)
-                        .title(R.string.app_name)
-                        .content(R.string.dialog)
-                        .positiveText(R.string.yes).onPositive((dialog, which) -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=as.wps.wpatester")))).negativeText(R.string.no);
-
-                MaterialDialog dialog = builder.build();
-                dialog.show();
-            }
-        }
-
 
         return super.onOptionsItemSelected(item);
     }

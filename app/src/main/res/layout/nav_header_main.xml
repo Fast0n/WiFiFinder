@@ -18,6 +18,6 @@
         android:paddingTop="@dimen/nav_header_vertical_spacing"
         android:text="@string/menu"
         android:textAppearance="@style/TextAppearance.AppCompat.Widget.ActionMode.Title"
-        android:textColor="@android:color/black" />
+        android:textColor="@android:color/white" />
 
 </LinearLayout>

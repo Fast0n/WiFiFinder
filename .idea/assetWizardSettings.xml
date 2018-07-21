@@ -23,7 +23,7 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="scalingPercent" value="73" />
+                                                <entry key="scalingPercent" value="55" />
                                                 <entry key="trimmed" value="true" />
                                               </map>
                                             </option>
@@ -47,7 +47,8 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="scalingPercent" value="110" />
+                                                <entry key="color" value="ffffff" />
+                                                <entry key="scalingPercent" value="75" />
                                                 <entry key="trimmed" value="true" />
                                               </map>
                                             </option>

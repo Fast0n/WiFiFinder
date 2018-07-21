@@ -4,12 +4,13 @@
     tools:showIn="navigation_view">
 
     <item
-        android:id="@+id/action_info"
-        android:icon="@drawable/ic_info"
-        android:title="@string/about" />
-    <item
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_settings"
         android:title="@string/settings" />
+
+    <item
+        android:id="@+id/action_info"
+        android:icon="@drawable/ic_info_purple"
+        android:title="@string/about" />
 
 </menu>

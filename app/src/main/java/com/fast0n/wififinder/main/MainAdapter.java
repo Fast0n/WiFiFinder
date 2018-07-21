@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import com.fast0n.wififinder.R;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MyViewHolder> {
@@ -32,20 +34,27 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MyViewHolder> 
         this.context = context;
     }
 
+    private static long getDateDiff(SimpleDateFormat format, String oldDate, String newDate) {
+        try {
+            return TimeUnit.DAYS.convert(format.parse(newDate).getTime() - format.parse(oldDate).getTime(), TimeUnit.MILLISECONDS);
+        } catch (Exception ignoring) {
+            return 0;
+        }
+    }
+
     @Override
+
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         Main c = mainList.get(position);
-        holder.tv_counter.setText(c.counter);
         holder.tv_ssid.setText(c.ssid);
-        holder.tv_location.setText(c.nameLocation);
+        holder.tv_location.setText(c.nameLocation );
 
-        if (c.counter.equals("1")){
+        if (c.counter == 1 ) {
             holder.tv_country.setVisibility(View.VISIBLE);
-            holder.tv_country.setText(c.nameLocation.split(",")[3]);
-        }
-        else{
+            holder.tv_country.setText(Html.fromHtml("<big><b>"+c.nameLocation.split(",")[3]+"</b></big> <small>" +  c.size + " " + context.getString(R.string.wifi_found).toUpperCase() + "</small>"));
+        } else
             holder.tv_country.setVisibility(View.GONE);
-        }
+
 
         switch (c.pwdtype) {
             case "WI-FI APERTO":
@@ -61,28 +70,24 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MyViewHolder> 
 
         holder.tv_datetime.setText(String.valueOf(c.datetime));
 
-        String timeStamp = new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime());
-        int dateDifference = (int) getDateDiff(new SimpleDateFormat("dd/MM/yyyy"), c.datetime.replaceAll("\\s+", ""), timeStamp);
-
-        if (dateDifference < 2){
-            Glide.with(context).load(context.getDrawable(R.drawable.ic_new)).apply(new RequestOptions().diskCacheStrategy(DiskCacheStrategy.NONE)).into(holder.imageNew);
-            holder.imageNew.setVisibility(View.VISIBLE);
-        }
-        else {
+        if (c.datetime.replaceAll("\\s+", "").equals("01-01-2000"))
             holder.imageNew.setVisibility(View.GONE);
-        }
+        else {
 
+            String timeStamp = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
+            int dateDifference = (int) getDateDiff(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()), c.datetime.replaceAll("\\s+", ""), timeStamp);
+
+            if (dateDifference < 2) {
+                Glide.with(context).load(context.getDrawable(R.drawable.ic_new)).apply(new RequestOptions().diskCacheStrategy(DiskCacheStrategy.NONE)).into(holder.imageNew);
+                holder.imageNew.setVisibility(View.VISIBLE);
+            } else
+                holder.imageNew.setVisibility(View.GONE);
+
+        }
 
         holder.map.setOnClickListener(view -> context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/maps?q=" + c.location.replaceAll("\\s+", "")))));
 
 
-    }
-    private static long getDateDiff(SimpleDateFormat format, String oldDate, String newDate) {
-        try {
-            return TimeUnit.DAYS.convert(format.parse(newDate).getTime() - format.parse(oldDate).getTime(), TimeUnit.MILLISECONDS);
-        } catch (Exception ignoring) {
-            return 0;
-        }
     }
 
     @Override
@@ -99,14 +104,13 @@ public class MainAdapter extends RecyclerView.Adapter<MainAdapter.MyViewHolder> 
 
     class MyViewHolder extends RecyclerView.ViewHolder {
 
-        TextView tv_counter, tv_ssid, tv_location, tv_password, tv_datetime, tv_country;
+        TextView tv_ssid, tv_location, tv_password, tv_datetime, tv_country;
         ImageButton map;
         ImageView imageNew;
 
         MyViewHolder(View view) {
             super(view);
             tv_country = view.findViewById(R.id.tv_country);
-            tv_counter = view.findViewById(R.id.tv_counter);
             tv_ssid = view.findViewById(R.id.tv_ssid);
             tv_location = view.findViewById(R.id.tv_location);
             tv_password = view.findViewById(R.id.tv_password);

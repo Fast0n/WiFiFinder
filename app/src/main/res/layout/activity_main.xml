@@ -16,7 +16,9 @@
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
+        app:itemTextColor="@android:color/white"
         android:layout_height="match_parent"
+        android:background="@color/colorBackgroundCardView"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_main"

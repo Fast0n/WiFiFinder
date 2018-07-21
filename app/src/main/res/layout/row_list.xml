@@ -15,14 +15,13 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:text="TextView"
-        android:textColor="@android:color/black"
+        android:textColor="@android:color/white"
         android:textSize="18sp"
-        android:textStyle="bold"
         android:visibility="gone"
         card_view:layout_constraintEnd_toEndOf="parent"
+        card_view:layout_constraintHorizontal_bias="0.0"
         card_view:layout_constraintStart_toStartOf="parent"
         card_view:layout_constraintTop_toTopOf="parent" />
 
@@ -42,9 +41,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.02"
-        card_view:cardBackgroundColor="#000"
         card_view:cardCornerRadius="10dp"
-        card_view:cardElevation="5dp"
+        android:background="@color/colorBackgroundCardView"
+        card_view:cardElevation="8dp"
         card_view:layout_constraintBottom_toBottomOf="parent"
         card_view:layout_constraintEnd_toEndOf="parent"
         card_view:layout_constraintStart_toStartOf="parent"
@@ -53,13 +52,24 @@
         <android.support.constraint.ConstraintLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="#FFFFFF"
+            android:background="@color/colorBackgroundCardView"
             android:orientation="vertical"
             android:paddingBottom="5dp"
-            android:paddingLeft="5dp"
             android:paddingRight="5dp"
             android:paddingTop="5dp">
+
+            <ImageView
+                android:id="@+id/imageNew"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="4dp"
+                card_view:layout_constraintEnd_toEndOf="parent"
+                card_view:layout_constraintHorizontal_bias="0.54"
+                card_view:layout_constraintStart_toStartOf="parent"
+                android:visibility="gone"
+                card_view:layout_constraintTop_toTopOf="parent" />
 
             <LinearLayout
                 android:id="@+id/linearLayout1"
@@ -72,7 +82,7 @@
                 android:paddingLeft="5dp"
                 card_view:layout_constraintEnd_toStartOf="@+id/imageButton"
                 card_view:layout_constraintStart_toStartOf="parent"
-                card_view:layout_constraintTop_toTopOf="parent">
+                card_view:layout_constraintTop_toBottomOf="@+id/imageNew">
 
                 <ImageView
                     android:layout_width="15dp"
@@ -85,7 +95,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
-                    android:textColor="@android:color/black" />
+                    android:textColor="@android:color/white" />
             </LinearLayout>
 
             <LinearLayout
@@ -115,7 +125,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
-                    android:textColor="@android:color/black" />
+                    android:textColor="@android:color/white" />
             </LinearLayout>
 
             <LinearLayout
@@ -146,7 +156,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
                     android:textAllCaps="false"
-                    android:textColor="@android:color/black" />
+                    android:textColor="@android:color/white" />
             </LinearLayout>
 
 
@@ -180,7 +190,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="5dp"
-                    android:textColor="@android:color/black" />
+                    android:textColor="@android:color/white" />
             </LinearLayout>
 
             <ImageButton
@@ -191,35 +201,8 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginTop="8dp"
                 android:background="@android:color/transparent"
-                card_view:layout_constraintBottom_toTopOf="@+id/tv_counter"
                 card_view:layout_constraintEnd_toEndOf="parent"
                 card_view:layout_constraintTop_toBottomOf="@+id/imageNew" />
-
-            <TextView
-                android:id="@+id/tv_counter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:text="0"
-                android:textColor="@android:color/black"
-                android:textStyle="bold"
-                card_view:layout_constraintBottom_toBottomOf="parent"
-                card_view:layout_constraintEnd_toEndOf="parent"
-                card_view:layout_constraintStart_toEndOf="@+id/linearLayout4" />
-
-            <ImageView
-                android:id="@+id/imageNew"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="4dp"
-                android:visibility="gone"
-                card_view:layout_constraintEnd_toEndOf="parent"
-                card_view:layout_constraintStart_toEndOf="@+id/linearLayout1"
-                card_view:layout_constraintTop_toTopOf="parent" />
 
         </android.support.constraint.ConstraintLayout>
 
